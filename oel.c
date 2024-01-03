@@ -6,7 +6,7 @@
 #include <time.h>
 
 #define API_ENDPOINT "http://api.openweathermap.org/data/2.5/weather?q=%s&appid=%s"
-#define MAX_RES_SIZE 2048
+#define MAX_RES_SIZE 8192
 #define Error_Memory_Allocation -2
 #define Error_JSON_Parsing -3
 #define Error_File_Opening -4
@@ -109,14 +109,27 @@ int fetch_data(const char *api_key,const char *city){
                     json_t *main=json_object_get(json_parsed,main_work);
                 
                     double temperature=json_number_value(json_object_get(main,"temp"));
+                    double feel=json_number_value(json_object_get(main,"feels_like"));
                     int pressure=json_integer_value(json_object_get(main,"pressure"));
                     int humidity=json_integer_value(json_object_get(main,"humidity"));
+
+                    json_t *my_array = json_object_get(json_parsed, "weather");
+                    json_t *weather_des = json_array_get(my_array,0);  // Assuming only one weather element
+                    const char *description = json_string_value(json_object_get(weather_des, "description"));
+                    
                     
                     FILE *file2=fopen("file2.json","w");         //processed data file
                     if (file2!=NULL){
-                        fprintf(file2,"\nTEMPERATURE : %.2f Degree Celsius\n",temperature);
-                        fprintf(file2,"\nPRESSURE : %d mb/hPa\n",pressure);
-                        fprintf(file2,"\nHUMIDITY : %d \n",humidity);
+                        fprintf(file2,"---------------------------\n");
+                        fprintf(file2,"WEATHER REPORT FOR %s:\n",city);
+                        fprintf(file2,"---------------------------\n");
+
+                        fprintf(file2,"TEMPERATURE : %.2f °C\n",temperature);
+                        fprintf(file2,"FEELS LIKE : %.2f °C\n",temperature);
+                        fprintf(file2,"PRESSURE : %d mb/hPa\n",pressure);
+                        fprintf(file2,"HUMIDITY : %d \n",humidity);
+                        fprintf(file2, "DESCRIPTION: %s\n", description);
+
                         fclose(file2);
                     }else{
                         fprintf(stderr,"\nERROR OPENING FILE FOR PROCESSED DATA\n");
